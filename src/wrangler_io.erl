@@ -91,13 +91,16 @@ conv_reason(_, terminated) -> ebadf;
 conv_reason(_, _Reason) -> badarg.
 
 format(Format) ->
-    format(Format, []).
+	ok.    
+	%format(Format, []).
 
 format(Format, Args) ->
-    format(default_output(), Format, Args).
+	ok.
+    %format(default_output(), Format, Args).
 
 format(Io, Format, Args) ->
-    o_request(Io, {format,Format,Args}).
+	ok.
+    %o_request(Io, {format,Format,Args}).
 
 
 
