@@ -52,13 +52,16 @@
 -spec (pos_to_node(FileOrTree::filename()|syntaxTree(), Pos::pos(), Cond::function()) ->
 	      {ok, syntaxTree()}|{error, string()}).      
 pos_to_node(FileOrTree, Pos, Pred) when is_list(FileOrTree) ->
-    case filelib:is_regular(FileOrTree) of 
+    io:format("pos to node started"),
+    A = case filelib:is_regular(FileOrTree) of 
         true ->
             {ok,{AnnAST, _}}= wrangler_ast_server:parse_annotate_file(FileOrTree, true),
             pos_to_node_1(AnnAST, Pos, Pred);
         false ->
             throw({error, "Badarg to function pos_to_node/3"})
-    end;
+    end,
+    io:format("pos_to_node: ~p", A),
+    A;
 pos_to_node(FileOrTree, Pos, Pred) ->
       pos_to_node_1(FileOrTree, Pos, Pred).
 
