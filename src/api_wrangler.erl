@@ -54,6 +54,7 @@
 -export([test_similar_code/1]).
 
 -include("../include/wrangler_internal.hrl").
+-include_lib("kernel/include/logger.hrl").
 
 %% @type(modulename()::atom()).
 %% @type(filename()::string()).
@@ -105,6 +106,7 @@ copy_mod(ModOrFileName, NewModName, SearchPaths) ->
 %%@spec rename_fun(ModOrFileName::modulename()|filename(), atom(), integer(), atom(),[dir()])->
 %%				       {ok, FilesChanged::[filename()]}|{error,Reason}
 rename_fun(ModOrFileName, FunName, Arity, NewFunName, SearchPaths) ->
+    ?LOG_INFO("Renaming function..."),
     try_apply(refac_rename_fun, rename_fun_by_name, 
 	      [ModOrFileName, FunName, Arity, NewFunName, SearchPaths,command,8]).
 
