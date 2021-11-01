@@ -83,7 +83,7 @@ undo() ->
 %%@spec rename_mod(ModorFileName::modulename()|filename(), NewModName::modulename(), SearchPaths::[dir()]) -> 
 %%			   {ok, FilesChanged::[filename()]}|{error,Reason}
 rename_mod(ModOrFileName, NewModName, SearchPaths) ->
-    file:write_file("/Users/domi/wrangler_log", <<"Renaming module\n">>, append),
+    file:write_file("/Users/domi/wrangler_log", <<"Renaming module\n">>, [append]),
     try_apply(refac_rename_mod, rename_mod_command, [ModOrFileName, NewModName, SearchPaths]).
 
 %%===================================================================================
