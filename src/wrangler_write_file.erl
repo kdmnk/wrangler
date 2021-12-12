@@ -153,24 +153,25 @@ write_a_file({FileInfo, AST}, TabWidth) ->
     OldFileName = element(1, FileInfo),
     NewFileName = element(2, FileInfo),
     FileFormat = wrangler_misc:file_format(OldFileName),
-    Bin = list_to_binary(wrangler_prettypr:print_ast(FileFormat, AST, TabWidth)),
-    case file:write_file(OldFileName, Bin) of
-        ok when OldFileName == NewFileName ->
-            OldFileName;
-        ok ->
-            case file:rename(OldFileName, NewFileName) of
-                ok -> OldFileName;
-                {error, Reason} ->
-                    Msg = io_lib:format("Wrangler could not rename file ~s: ~w \n",
-                                        [OldFileName, Reason]),
-                    throw({error, lists:flatten(Msg)})
-            end;
-        {error, Reason} ->
-            Msg = io_lib:format("Wrangler could not write to file ~s: ~w \n",
-                                [NewFileName, Reason]),
-            throw({error, lists:flatten(Msg)})
-    end.
-  
+    {OldFileName, NewFileName, list_to_binary(wrangler_prettypr:print_ast(FileFormat, AST, TabWidth))}.
+	% Bin = list_to_binary(wrangler_prettypr:print_ast(FileFormat, AST, TabWidth)),
+    % case file:write_file(OldFileName, Bin) of
+    %     ok when OldFileName == NewFileName ->
+    %         OldFileName;
+    %     ok ->
+    %         case file:rename(OldFileName, NewFileName) of
+    %             ok -> OldFileName;
+    %             {error, Reason} ->
+    %                 Msg = io_lib:format("Wrangler could not rename file ~s: ~w \n",
+    %                                     [OldFileName, Reason]),
+    %                 throw({error, lists:flatten(Msg)})
+    %         end;
+    %     {error, Reason} ->
+    %         Msg = io_lib:format("Wrangler could not write to file ~s: ~w \n",
+    %                             [NewFileName, Reason]),
+    %         throw({error, lists:flatten(Msg)})
+    % end.
+
 backup_files(Results) ->
     F0 = fun ({FileInfo,_AST}) ->
 		 case FileInfo of
