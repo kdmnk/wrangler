@@ -60,7 +60,9 @@
 	 do_fold_expression/5,
          do_fold_expression/6,
          fold_expr_by_name/8,
-         fold_expr_by_name_eclipse/7]).
+         fold_expr_by_name_eclipse/7,
+		 pos_to_fun_clause/2,
+		 search_candidate_exprs/4]).
 
 -export([fold_expression_1/5]).  %% used by tests.
 
