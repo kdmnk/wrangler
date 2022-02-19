@@ -122,12 +122,10 @@ parse_file(File, Options) ->
 parse_file(File, Parser, Options) ->
     case file:open(File, [read]) of
         {ok, Dev} ->
-            file:write_file("/Users/domi/wrangler_log", <<"Opened file successfully\n">>, [append]),
             try Parser(Dev, {1,1}, Options)  %% Modified by Huiqing Li
             after file:close(Dev)
 	    end;
         {error, IoErr} ->
-            file:write_file("/Users/domi/wrangler_log", <<"Couldnt open file\n">>, append),
             {error, IoErr}
     end.
 
