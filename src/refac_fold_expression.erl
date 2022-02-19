@@ -59,9 +59,11 @@
 	 fold_expr_1_eclipse/5,
 	 do_fold_expression/5,
          do_fold_expression/6,
+		 fold_candidate/6,
          fold_expr_by_name/8,
          fold_expr_by_name_eclipse/7,
 		 pos_to_fun_clause/2,
+		 get_fun_clause_def/4,
 		 search_candidate_exprs/4]).
 
 -export([fold_expression_1/5]).  %% used by tests.
@@ -194,6 +196,10 @@ do_fold_expression(FileName, CandidatesToFold, SearchPaths, Editor, TabWidth, Lo
     wrangler_write_file:write_refactored_files([{{FileName, FileName}, AnnAST1}], Editor, TabWidth, LogMsg),
     {ok, [FileName]}.
 
+fold_candidate(AnnAST, Candidate, FileName, Editor, TabWidth, LogMsg) ->
+	AnnAST1 = fold_expression_1_1(AnnAST, [Candidate]),
+	wrangler_write_file:write_refactored_files([{{FileName, FileName}, AnnAST1}], Editor, TabWidth, LogMsg).
+
 fold_expression_1_1(AnnAST, []) ->
     AnnAST;
 fold_expression_1_1(AnnAST, [{StartLine, StartCol, EndLine, EndCol, Expr0, FunApp0, FunClauseDef0}| Tail]) ->
@@ -205,6 +211,8 @@ fold_expression_1_1(AnnAST, [{StartLine, StartCol, EndLine, EndCol, Expr0, FunAp
 		     fun do_replace_expr_with_fun_call/2,
 		     AnnAST, {Body, {{{StartLine, StartCol}, {EndLine, EndCol}}, Expr, FunApp}}),
     fold_expression_1_1(AnnAST1, Tail).
+
+
 
 %% =============================================================================================
 %% Side condition analysis.
