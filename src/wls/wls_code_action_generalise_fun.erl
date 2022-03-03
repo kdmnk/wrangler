@@ -17,7 +17,7 @@
 title() -> <<"Generalise Function">>.
 
 -spec id() -> action_id().
-id() -> <<"generalise_fun">>.
+id() -> <<"generalise-fun">>.
 
 -spec is_default() -> boolean().
 is_default() -> true.

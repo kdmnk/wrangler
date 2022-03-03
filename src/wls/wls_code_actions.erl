@@ -49,7 +49,7 @@ get_actions(Doc, Range) ->
 
 -spec available_actions() -> [action_id()].
 available_actions() ->
-  [ <<"generalise_fun">>
+  [ <<"generalise-fun">>
   ].
 
 -spec default_actions() ->  [action_id()].
