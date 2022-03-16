@@ -9,25 +9,32 @@
 %%==============================================================================
 
 -callback is_default() -> boolean().
+
+-callback id() -> action_id().
+
+%% @doc Return the title that is displayed in the code action menu.
 -callback title() -> binary().
--callback id() -> binary().
 
--callback init(els_core:uri(), els_core:range()) -> state().
--callback precondition(els_core:uri(), els_core:range()) -> boolean().
+%% @doc Precondition check + return a state.
+-callback init(path(), range(), syntaxTree()) -> {true, state()} | false.
 
--callback command_args(els_core:uri(), els_core:range(), state()) -> map().
--callback execute_command([any()]) -> [map()].
+%% @doc Indicate additional user input, if needed. Not used yet.
+-callback user_input() -> #{syntax_type() => description()}.
 
--optional_callbacks([ init/2
-                    , precondition/2
-                    ]).
+%% @doc Get the arguments for the code action`s command.
+-callback command_args(path(), range(), state()) -> command_args().
+
+%% @doc Execute the command.
+-callback execute_command([command_args()]) -> [map()].
+
+-optional_callbacks([ user_input/0 ]).
 
 %%==============================================================================
 %% API
 %%==============================================================================
 
 -export([ enabled_actions/0
-        , get_actions/2 
+        , get_actions/2
         , execute_command/2
         ]).
 
@@ -36,20 +43,31 @@
 %%==============================================================================
 
 -include("wls_core.hrl").
+-include("wrangler_internal.hrl").
 
 %%==============================================================================
 %% API
 %%==============================================================================
 
-
 -spec get_actions(els_core:uri(), els_core:range()) -> [code_action()].
-get_actions(Doc, Range) ->
-  Pred = fun (Action) -> Action /= null end,
-  lists:filter(Pred, [actions(Id, Doc, Range) || Id <- enabled_actions()]).
+get_actions(Uri, Range) ->
+  Path = wls_utils:path(Uri),
+  WLS_Range = wls_utils:range(Range),
+  case wrangler_ast_server:parse_annotate_file(Path, true) of
+    {ok, {AnnAST, _Info}} ->
+      Pred = fun (Action) -> Action /= null end,
+      lists:filter(Pred, [ actions(Id, Path, WLS_Range, AnnAST) || Id <- enabled_actions()]);
+    _ -> []
+  end.
 
 -spec available_actions() -> [action_id()].
 available_actions() ->
-  [ <<"generalise-fun">>
+  [% <<"generalise-fun">>
+  <<"extract-fun">>
+, <<"test">>
+  % , <<"new-macro">>
+  % , <<"new-var">>
+  % , <<"rename-fun">>
   ].
 
 -spec default_actions() ->  [action_id()].
@@ -66,20 +84,13 @@ enabled_actions() ->
   %lists:usort((Default ++ valid(Enabled)) -- valid(Disabled)).
   default_actions().
 
--spec actions(action_id(), els_core:uri(), els_core:range()) ->  code_action() | null.
-actions(Id, Uri, Range) ->
+-spec actions(action_id(), path(), range(), syntaxTree()) ->  code_action() | null.
+actions(Id, Path, Range, AST) ->
   CbModule = cb_module(Id),
-  case precondition(CbModule, Uri, Range) of
-    true ->
-      State = case erlang:function_exported(CbModule, init, 1) of
-                true ->
-                  CbModule:init(Uri, Range);
-                false ->
-                  'state_not_initialized'
-              end,
-      make_action(CbModule, Uri, Range, State);
-    false ->
-      null
+  case CbModule:init(Path, Range, AST) of
+    {true, State} ->
+      make_action(CbModule, Path, Range, State);
+    false -> null
   end.
 
 -spec execute_command(els_command:command_id(), [any()]) -> [map()].
@@ -92,11 +103,11 @@ execute_command(Command, Arguments) ->
 %% Constructors
 %%==============================================================================
 
--spec make_action(module(), els_core:uri(), els_core:range(), state()) -> code_action().
-make_action(CbModule, Uri, Range, State) ->
+-spec make_action(module(), path(), range(), state()) -> code_action().
+make_action(CbModule, Path, Range, State) ->
   #{ title       => CbModule:title()
    , kind        => ?CODE_ACTION_KIND_REFACTOR
-   , command     => els_command:make_command(CbModule:title(), CbModule:id(), CbModule:command_args(Uri, Range, State))
+   , command     => els_command:make_command(CbModule:title(), CbModule:id(), [CbModule:command_args(Path, Range, State)])
   }.
 
 
@@ -105,16 +116,3 @@ make_action(CbModule, Uri, Range, State) ->
 cb_module(Id0) ->
   Id = re:replace(Id0, "-", "_", [global, {return, binary}]),
   binary_to_atom(<<"wls_code_action_", Id/binary>>, utf8).
-
-%%==============================================================================
-%% Internal Functions
-%%==============================================================================
-
--spec precondition(atom(), els_core:uri(), wls_utils:range()) -> boolean().
-precondition(CbModule, Uri, Range) ->
-  case erlang:function_exported(CbModule, precondition, 2) of
-    true ->
-      CbModule:precondition(Uri, Range);
-    false ->
-      true
-  end.
